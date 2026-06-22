@@ -37,6 +37,10 @@ const modelBaseUrl = document.getElementById("modelBaseUrl");
 const modelName = document.getElementById("modelName");
 const modelApiKey = document.getElementById("modelApiKey");
 const modelStatus = document.getElementById("modelStatus");
+const memoryToggle = document.getElementById("memoryToggle");
+const memoryClose = document.getElementById("memoryClose");
+const memoryPanel = document.getElementById("memoryPanel");
+const drawerScrim = document.getElementById("drawerScrim");
 
 const MODEL_STORAGE_KEY = "desktop-digital-life-model-settings";
 const providerDefaults = {
@@ -71,6 +75,17 @@ let renderedMessageSignature = "";
 let inputComposing = false;
 let manualVisualState = "";
 let manualVisualUntil = 0;
+
+function setMemoryDrawer(open) {
+  if (!app || !memoryPanel || !memoryToggle) return;
+  app.dataset.sideOpen = open ? "true" : "false";
+  memoryPanel.setAttribute("aria-hidden", open ? "false" : "true");
+  memoryToggle.setAttribute("aria-expanded", open ? "true" : "false");
+  if (open) {
+    memoryPanel.querySelector("button, summary, input, textarea, select")?.focus();
+  }
+}
+
 const expression = expressionCanvas
   ? createDigitalLifeExpression(expressionCanvas, {
       reducedMotion: window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches,
@@ -828,6 +843,25 @@ lifeInput.addEventListener("keydown", event => {
 });
 
 newMessagesNotice?.addEventListener("click", scrollMessageLogToBottom);
+
+memoryToggle?.addEventListener("click", () => {
+  setMemoryDrawer(app?.dataset.sideOpen !== "true");
+});
+
+memoryClose?.addEventListener("click", () => {
+  setMemoryDrawer(false);
+  memoryToggle?.focus();
+});
+
+drawerScrim?.addEventListener("click", () => {
+  setMemoryDrawer(false);
+});
+
+document.addEventListener("keydown", event => {
+  if (event.key !== "Escape" || app?.dataset.sideOpen !== "true") return;
+  setMemoryDrawer(false);
+  memoryToggle?.focus();
+});
 
 listenBtn.addEventListener("click", async () => {
   setLifeState("listening");

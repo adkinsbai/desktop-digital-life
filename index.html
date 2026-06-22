@@ -8,7 +8,7 @@
   <link rel="stylesheet" href="./digital-life.css">
 </head>
 <body>
-  <main class="life-app" data-life-state="idle">
+  <main class="life-app" data-life-state="idle" data-side-open="false">
     <header class="life-topbar">
       <a class="back-link" href="/">Desktop Life</a>
       <div>
@@ -18,11 +18,30 @@
       <div class="top-status">
         <span class="status-dot" aria-hidden="true"></span>
         <span id="hardwareMode">local</span>
-        <button id="modelToggle" type="button" aria-controls="modelPanel" aria-expanded="false">Model</button>
+        <button id="memoryToggle" type="button" aria-controls="memoryPanel" aria-expanded="false">记忆</button>
+        <button id="modelToggle" type="button" aria-controls="modelPanel" aria-expanded="false">模型</button>
       </div>
     </header>
 
     <section class="life-stage" aria-label="Digital life companion workspace">
+      <div class="companion-column">
+        <section class="companion-screen" aria-labelledby="companionName">
+          <div class="life-bezel">
+            <div class="life-screen">
+              <canvas id="lifeExpression" class="life-expression" aria-hidden="true"></canvas>
+              <div class="life-screen-glow" aria-hidden="true"></div>
+            </div>
+            <div class="life-slot" aria-hidden="true"></div>
+          </div>
+          <div class="life-identity">
+            <p id="lifeStateLabel">idle</p>
+            <h2 id="companionName">Vibe</h2>
+            <span id="lifeMood">calm</span>
+          </div>
+        </section>
+
+      </div>
+
       <section class="conversation-panel" aria-label="Digital life conversation">
         <form class="model-panel" id="modelPanel" hidden>
           <label>
@@ -72,49 +91,42 @@
         </form>
       </section>
 
-      <div class="companion-column">
-        <section class="companion-screen" aria-labelledby="companionName">
-          <div class="life-bezel">
-            <div class="life-screen">
-              <canvas id="lifeExpression" class="life-expression" aria-hidden="true"></canvas>
-              <div class="life-screen-glow" aria-hidden="true"></div>
+      <button class="drawer-scrim" id="drawerScrim" type="button" aria-label="关闭记忆抽屉"></button>
+      <aside class="memory-panel" id="memoryPanel" aria-label="Digital life memory" aria-hidden="true">
+        <div class="drawer-head">
+          <div>
+            <p>Memory</p>
+            <h2>记忆与内心</h2>
+          </div>
+          <button id="memoryClose" type="button" aria-label="关闭记忆抽屉">关闭</button>
+        </div>
+        <section class="control-panel" aria-label="Digital life advanced controls">
+          <details class="memory-drawer advanced-drawer">
+            <summary><span>Advanced</span><b>高级控制</b></summary>
+            <div class="state-grid">
+              <button type="button" data-life-state="idle" aria-pressed="true">Idle</button>
+              <button type="button" data-life-state="sleep" aria-pressed="false">Sleep</button>
+              <button type="button" data-life-state="listening" aria-pressed="false">Listen</button>
+              <button type="button" data-life-state="thinking" aria-pressed="false">Think</button>
+              <button type="button" data-life-state="speaking" aria-pressed="false">Speak</button>
+              <button type="button" data-life-state="angry" aria-pressed="false">Angry</button>
+              <button type="button" data-life-state="happy" aria-pressed="false">Happy</button>
+              <button type="button" data-life-state="lonely" aria-pressed="false">Lonely</button>
+              <button type="button" data-life-state="nearby" aria-pressed="false">Nearby</button>
+              <button type="button" data-life-state="away" aria-pressed="false">Away</button>
             </div>
-            <div class="life-slot" aria-hidden="true"></div>
-          </div>
-          <div class="life-identity">
-            <p id="lifeStateLabel">idle</p>
-            <h2 id="companionName">Vibe</h2>
-            <span id="lifeMood">calm</span>
-          </div>
+            <div class="action-row">
+              <button class="primary-action" id="listenBtn" type="button">Listen</button>
+              <button id="tickBtn" type="button">Heartbeat</button>
+              <button id="reflectBtn" type="button">Reflect</button>
+              <button id="refreshBtn" type="button">Refresh</button>
+            </div>
+            <div class="life-loop-row">
+              <label><input id="loopToggle" type="checkbox"> autonomous rhythm</label>
+              <span id="loopStatus">manual</span>
+            </div>
+          </details>
         </section>
-
-        <section class="control-panel" aria-label="Digital life controls">
-          <div class="state-grid">
-            <button type="button" data-life-state="idle" aria-pressed="true">Idle</button>
-            <button type="button" data-life-state="sleep" aria-pressed="false">Sleep</button>
-            <button type="button" data-life-state="listening" aria-pressed="false">Listen</button>
-            <button type="button" data-life-state="thinking" aria-pressed="false">Think</button>
-            <button type="button" data-life-state="speaking" aria-pressed="false">Speak</button>
-            <button type="button" data-life-state="angry" aria-pressed="false">Angry</button>
-            <button type="button" data-life-state="happy" aria-pressed="false">Happy</button>
-            <button type="button" data-life-state="lonely" aria-pressed="false">Lonely</button>
-            <button type="button" data-life-state="nearby" aria-pressed="false">Nearby</button>
-            <button type="button" data-life-state="away" aria-pressed="false">Away</button>
-          </div>
-          <div class="action-row">
-            <button class="primary-action" id="listenBtn" type="button">Listen</button>
-            <button id="tickBtn" type="button">Heartbeat</button>
-            <button id="reflectBtn" type="button">Reflect</button>
-            <button id="refreshBtn" type="button">Refresh</button>
-          </div>
-          <div class="life-loop-row">
-            <label><input id="loopToggle" type="checkbox"> autonomous rhythm</label>
-            <span id="loopStatus">manual</span>
-          </div>
-        </section>
-      </div>
-
-      <aside class="memory-panel" aria-label="Digital life memory">
         <section>
           <p>Vital State</p>
           <h2>生命体征</h2>

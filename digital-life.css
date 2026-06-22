@@ -1125,3 +1125,412 @@ summary:focus-visible {
     transition-duration: .01ms !important;
   }
 }
+
+/* Simplified companion-first shell. Keep older component rules above for the
+   data-heavy drawers, but make the first viewport feel like a living object. */
+body {
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--warm) 92%, var(--accent) 8%) 0%, var(--warm) 58%, color-mix(in srgb, var(--warm) 82%, var(--ink) 18%) 100%);
+}
+
+.life-app {
+  isolation: isolate;
+}
+
+.life-topbar {
+  min-height: 72px;
+  padding: 14px clamp(14px, 2vw, 28px);
+  border-bottom: 1px solid rgb(var(--ink-rgb) / .08);
+  background: color-mix(in srgb, var(--warm) 90%, var(--ink) 10%);
+  color: var(--ink);
+}
+
+.life-topbar p,
+.life-topbar h1 {
+  color: var(--ink);
+}
+
+.back-link {
+  border-color: rgb(var(--ink-rgb) / .12);
+  color: var(--ink);
+  background: rgb(var(--warm-rgb) / .5);
+}
+
+.top-status {
+  color: var(--ink);
+}
+
+.top-status button {
+  padding: 0 14px;
+  border-color: rgb(var(--ink-rgb) / .13);
+  background: rgb(var(--warm-rgb) / .54);
+  color: var(--ink);
+  box-shadow: none;
+}
+
+#memoryToggle {
+  background: var(--ink);
+  color: var(--warm);
+  border-color: rgb(var(--ink-rgb) / .26);
+}
+
+.life-stage {
+  position: relative;
+  grid-template-columns: minmax(300px, .9fr) minmax(420px, 1.12fr);
+  grid-template-areas: "companion chat";
+  gap: clamp(14px, 2vw, 28px);
+  padding: clamp(14px, 2.2vw, 32px);
+  overflow: hidden;
+  background: transparent;
+}
+
+.companion-column {
+  grid-template-rows: 1fr;
+}
+
+.companion-screen,
+.conversation-panel {
+  border-color: rgb(var(--ink-rgb) / .12);
+  border-radius: var(--radius);
+  background: color-mix(in srgb, var(--warm) 94%, var(--ink) 6%);
+  box-shadow: 0 24px 70px rgb(var(--ink-rgb) / .12);
+}
+
+.companion-screen {
+  min-height: 0;
+  padding: clamp(18px, 3vw, 42px);
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--warm) 98%, var(--accent) 2%) 0%, color-mix(in srgb, var(--warm) 84%, var(--accent) 16%) 100%);
+}
+
+.life-bezel {
+  width: min(100%, 420px);
+  padding: clamp(18px, 2.2vw, 28px) clamp(20px, 2.6vw, 34px) clamp(36px, 4vw, 54px);
+  border-radius: var(--radius);
+  border-color: rgb(var(--ink-rgb) / .18);
+  background:
+    linear-gradient(145deg, color-mix(in srgb, var(--warm) 96%, var(--accent) 4%) 0%, color-mix(in srgb, var(--warm) 68%, var(--accent) 32%) 62%, color-mix(in srgb, var(--accent) 62%, var(--ink) 38%) 100%);
+  box-shadow:
+    inset 0 1px 0 rgb(var(--warm-rgb) / .72),
+    inset 0 -18px 28px rgb(var(--ink-rgb) / .16),
+    0 24px 70px rgb(var(--ink-rgb) / .18);
+}
+
+.life-bezel::before {
+  height: 5px;
+  background: rgb(var(--ink-rgb) / .58);
+  box-shadow: none;
+}
+
+.life-screen {
+  border-width: 10px;
+  border-radius: var(--radius);
+}
+
+.life-slot {
+  bottom: 20px;
+  height: 7px;
+  background: rgb(var(--ink-rgb) / .58);
+}
+
+.life-identity {
+  display: grid;
+  gap: 3px;
+}
+
+.life-identity h2 {
+  font-size: clamp(24px, 3vw, 34px);
+}
+
+.control-panel {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.advanced-drawer {
+  margin: 0;
+}
+
+.conversation-panel {
+  grid-template-rows: max-content max-content minmax(0, 1fr) max-content;
+}
+
+.panel-head {
+  padding: 16px 18px;
+  background: color-mix(in srgb, var(--warm) 94%, var(--accent) 6%);
+}
+
+.chat-life-mini {
+  display: none;
+}
+
+.message-log {
+  padding: 18px;
+  background: color-mix(in srgb, var(--warm) 98%, var(--ink) 2%);
+}
+
+.msg {
+  max-width: min(78%, 720px);
+  border-color: rgb(var(--ink-rgb) / .1);
+  background: rgb(var(--warm-rgb) / .74);
+  box-shadow: 0 8px 24px rgb(var(--ink-rgb) / .06);
+}
+
+.msg.user {
+  background: color-mix(in srgb, var(--warm) 84%, var(--accent) 16%);
+}
+
+.msg.assistant {
+  border-left-width: 2px;
+}
+
+.life-composer {
+  max-height: none;
+  padding: 14px 16px;
+  background: color-mix(in srgb, var(--warm) 92%, var(--ink) 8%);
+}
+
+.life-composer textarea {
+  min-height: 64px;
+  border-color: rgb(var(--ink-rgb) / .12);
+  background: rgb(var(--warm-rgb) / .7);
+}
+
+.drawer-scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  display: none;
+  min-height: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: rgb(var(--ink-rgb) / .28);
+  box-shadow: none;
+}
+
+.memory-panel {
+  position: fixed;
+  top: 88px;
+  right: clamp(10px, 2vw, 24px);
+  bottom: clamp(10px, 2vw, 24px);
+  z-index: 30;
+  width: min(390px, calc(100vw - 20px));
+  padding: 14px;
+  border: 1px solid rgb(var(--ink-rgb) / .12);
+  border-radius: var(--radius);
+  background: color-mix(in srgb, var(--warm) 96%, var(--ink) 4%);
+  box-shadow: 0 30px 90px rgb(var(--ink-rgb) / .24);
+  transform: translateX(calc(100% + 28px));
+  visibility: hidden;
+  pointer-events: none;
+  transition: transform 220ms ease, visibility 220ms ease;
+  overflow: auto;
+}
+
+.life-app[data-side-open="true"] .memory-panel {
+  transform: translateX(0);
+  visibility: visible;
+  pointer-events: auto;
+}
+
+.life-app[data-side-open="true"] .drawer-scrim {
+  display: block;
+}
+
+.drawer-head {
+  position: sticky;
+  top: -14px;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 4px 0 12px;
+  background: color-mix(in srgb, var(--warm) 96%, var(--ink) 4%);
+}
+
+.drawer-head p,
+.drawer-head h2 {
+  margin: 0;
+}
+
+.drawer-head p {
+  color: var(--muted);
+  font-family: var(--mono);
+  font-size: 11px;
+  text-transform: uppercase;
+}
+
+.drawer-head h2 {
+  font-size: 20px;
+}
+
+.drawer-head button {
+  padding: 0 14px;
+  box-shadow: none;
+}
+
+.memory-panel section,
+.memory-drawer {
+  min-height: 0;
+  box-shadow: none;
+  border-color: rgb(var(--ink-rgb) / .1);
+  background: rgb(var(--warm-rgb) / .56);
+}
+
+.memory-panel .control-panel {
+  min-height: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+
+.memory-panel .control-panel .memory-drawer {
+  padding: 14px;
+}
+
+.memory-panel > section,
+.memory-panel > details,
+.memory-panel .control-panel {
+  margin-bottom: 12px;
+}
+
+.state-grid,
+.action-row {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+@media (max-width: 980px) {
+  .life-app {
+    height: auto;
+    min-height: 100dvh;
+    overflow: visible;
+  }
+
+  .life-topbar {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+
+  .life-stage {
+    height: auto;
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      "companion"
+      "chat";
+    overflow: visible;
+  }
+
+  .companion-screen {
+    min-height: 300px;
+  }
+
+  .life-bezel {
+    width: min(100%, 320px);
+  }
+
+  .conversation-panel {
+    height: min(560px, calc(100dvh - 106px));
+    min-height: 450px;
+  }
+
+  .memory-panel {
+    top: 78px;
+  }
+}
+
+@media (max-width: 520px) {
+  .life-topbar {
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 10px;
+  }
+
+  .life-topbar > div:nth-child(2) {
+    min-width: 0;
+  }
+
+  .life-topbar h1 {
+    font-size: 17px;
+  }
+
+  .top-status {
+    gap: 5px;
+  }
+
+  .top-status #hardwareMode,
+  .top-status .status-dot {
+    display: none;
+  }
+
+  .top-status button {
+    min-height: 40px;
+    padding: 0 10px;
+  }
+
+  .life-stage {
+    padding: 10px;
+    gap: 10px;
+  }
+
+  .companion-screen {
+    min-height: 168px;
+    padding: 12px;
+    gap: 8px;
+  }
+
+  .life-bezel {
+    width: min(100%, 168px);
+    padding: 12px 14px 24px;
+  }
+
+  .life-slot {
+    bottom: 10px;
+    width: 54px;
+    height: 5px;
+  }
+
+  .life-identity h2 {
+    font-size: 20px;
+  }
+
+  .life-identity p,
+  .life-identity span {
+    font-size: 11px;
+  }
+
+  .panel-head {
+    padding: 12px;
+  }
+
+  .conversation-panel {
+    height: min(410px, calc(100dvh - 88px));
+    min-height: 350px;
+  }
+
+  .life-composer {
+    grid-template-columns: 1fr;
+    padding: 10px;
+  }
+
+  .life-composer textarea {
+    min-height: 58px;
+  }
+
+  .memory-panel {
+    inset: 70px 8px 8px;
+    width: auto;
+    transform: translateY(calc(100% + 24px));
+  }
+
+  .life-app[data-side-open="true"] .memory-panel {
+    transform: translateY(0);
+  }
+
+  .msg {
+    max-width: 92%;
+  }
+}
