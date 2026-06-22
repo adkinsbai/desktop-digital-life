@@ -32,6 +32,11 @@ function mixColor(a, b, amount) {
 
 export function createDigitalLifeExpression(canvas, options = {}) {
   const ctx = canvas.getContext("2d", { alpha: true });
+  const theme = {
+    warm: "#f4e6d2",
+    ink: "#2a1f1a",
+    accent: "#b76e50",
+  };
   const target = {
     state: "idle",
     mood: "calm",
@@ -93,21 +98,22 @@ export function createDigitalLifeExpression(canvas, options = {}) {
 
   function palette() {
     const state = visualState();
-    if (state === "sleep") return { line: "#d6d7ff", glow: "#7a6ff0", bg: "#677575" };
-    if (state === "listening") return { line: "#effcff", glow: "#4cc9f0", bg: "#afc4ad" };
-    if (state === "speaking") return { line: "#fbffd5", glow: "#d7ff46", bg: "#afc4ad" };
-    if (state === "angry") return { line: "#fff2ec", glow: "#ff4f3e", bg: "#a98580" };
-    if (state === "happy") return { line: "#fbffd5", glow: "#d7ff46", bg: "#b5c994" };
-    if (state === "lonely") return { line: "#e8e6ff", glow: "#7a6ff0", bg: "#8084a0" };
-    if (state === "thinking") return { line: "#effcff", glow: "#4cc9f0", bg: "#a9bdaa" };
-    if (state === "away") return { line: "#d6e0e1", glow: "#687076", bg: "#6f7f7b" };
+    const screen = mixColor(theme.warm, theme.ink, 0.42);
+    if (state === "sleep") return { line: mixColor(theme.warm, theme.ink, 0.32), glow: theme.ink, bg: mixColor(screen, theme.ink, 0.34) };
+    if (state === "listening") return { line: theme.warm, glow: theme.accent, bg: mixColor(screen, theme.accent, 0.12) };
+    if (state === "speaking") return { line: theme.warm, glow: theme.accent, bg: mixColor(screen, theme.warm, 0.16) };
+    if (state === "angry") return { line: theme.warm, glow: theme.accent, bg: mixColor(screen, theme.accent, 0.34) };
+    if (state === "happy") return { line: theme.warm, glow: theme.accent, bg: mixColor(screen, theme.warm, 0.28) };
+    if (state === "lonely") return { line: mixColor(theme.warm, theme.ink, 0.16), glow: theme.ink, bg: mixColor(screen, theme.ink, 0.24) };
+    if (state === "thinking") return { line: theme.warm, glow: theme.accent, bg: mixColor(screen, theme.accent, 0.14) };
+    if (state === "away") return { line: mixColor(theme.warm, theme.ink, 0.26), glow: theme.ink, bg: mixColor(screen, theme.ink, 0.28) };
 
     const warm = clamp((target.valence + 1) / 2);
     const stressed = clamp(target.stress);
     const lonely = clamp(target.loneliness);
-    const line = mixColor(mixColor("#effcff", "#fbffd5", warm), "#fff2ec", stressed * 0.55);
-    const glow = mixColor(mixColor("#4cc9f0", "#d7ff46", warm), "#ff4f3e", stressed * 0.65);
-    const bg = mixColor(mixColor("#afc4ad", "#b5c994", warm), "#8084a0", lonely * 0.45);
+    const line = mixColor(mixColor(theme.warm, theme.accent, stressed * 0.18), theme.warm, warm * 0.2);
+    const glow = mixColor(theme.accent, theme.ink, lonely * 0.38);
+    const bg = mixColor(mixColor(screen, theme.warm, warm * 0.16), theme.ink, lonely * 0.26);
     return { line, glow, bg };
   }
 
@@ -133,13 +139,13 @@ export function createDigitalLifeExpression(canvas, options = {}) {
   function drawBackground(width, height, colors) {
     const gradient = ctx.createRadialGradient(width * 0.5, height * 0.45, 0, width * 0.5, height * 0.5, width * 0.7);
     gradient.addColorStop(0, colors.bg);
-    gradient.addColorStop(1, "#6f7f7b");
+    gradient.addColorStop(1, mixColor(theme.warm, theme.ink, 0.56));
     ctx.fillStyle = gradient;
     ctx.fillRect(0, 0, width, height);
 
     const profile = visualProfile();
     ctx.globalAlpha = target.state === "sleep" ? 0.045 : 0.08 + profile.glow * 0.08;
-    ctx.fillStyle = "#f8f4ea";
+    ctx.fillStyle = theme.warm;
     for (let y = 0; y < height; y += 6) {
       ctx.fillRect(0, y, width, 1);
     }

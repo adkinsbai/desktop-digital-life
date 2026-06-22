@@ -12,6 +12,11 @@ const files = [
   ".env.example",
   "package.json",
 ];
+const paletteFiles = [
+  "digital-life.css",
+  "digital-life-expression.js",
+];
+const allowedPalette = new Set(["#f4e6d2", "#2a1f1a", "#b76e50"]);
 
 const forbidden = [
   { pattern: /\bVibeBoard\b/i, reason: "standalone release should not mention VibeBoard" },
@@ -33,6 +38,17 @@ for (const file of files) {
     if (!rule.pattern.test(text)) continue;
     failed = true;
     console.error(`release hygiene failed in ${file}: ${rule.reason}`);
+  }
+}
+
+for (const file of paletteFiles) {
+  const fullPath = path.join(ROOT, file);
+  const text = await fs.readFile(fullPath, "utf8");
+  const colors = [...text.matchAll(/#[0-9a-fA-F]{6}\b/g)].map(match => match[0].toLowerCase());
+  const unexpected = [...new Set(colors.filter(color => !allowedPalette.has(color)))];
+  if (unexpected.length) {
+    failed = true;
+    console.error(`release hygiene failed in ${file}: only the warm three-color palette is allowed (${unexpected.join(", ")})`);
   }
 }
 
