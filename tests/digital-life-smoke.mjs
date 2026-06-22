@@ -1,7 +1,12 @@
 ﻿import { randomUUID } from "node:crypto";
+import { promises as fs } from "node:fs";
+import os from "node:os";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 import { assert, withServer } from "./support/serverHarness.mjs";
 
 const DIGITAL_LIFE_ID = `smoke-${randomUUID()}`;
+const ROOT = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
 
 function assertObject(value, label) {
   assert(value && typeof value === "object" && !Array.isArray(value), `${label} should be an object`);
@@ -39,6 +44,27 @@ async function main() {
     assert(status.ok === true, "/api/status should return ok");
     assert(status.mode === "standalone", "/api/status should expose standalone mode");
     assertObject(status.runtime, "/api/status.runtime");
+
+    const htmlHead = await fetch(`${baseUrl}/`, { method: "HEAD" });
+    assert(htmlHead.ok === true, "HEAD / should return ok");
+    assert((htmlHead.headers.get("content-type") || "").includes("text/html"), "HEAD / should expose html content-type");
+    assert((htmlHead.headers.get("cache-control") || "").includes("no-store"), "HEAD / should be no-store");
+
+    const traversal = await fetch(`${baseUrl}/..%2Fpackage.json`);
+    assert(traversal.status === 403 || traversal.status === 404, "static server should reject traversal paths");
+
+    for (const privatePath of [
+      "/.env",
+      "/runtime/digital-life.db",
+      "/runtime/digital-life.log",
+      "/server.mjs",
+      "/package.json",
+      "/src/digitalLife.mjs",
+      "/tests/digital-life-smoke.mjs",
+    ]) {
+      const response = await fetch(`${baseUrl}${privatePath}`);
+      assert(response.status === 404, `static server should not expose ${privatePath}`);
+    }
 
     const initial = await json("/api/digital-life/state");
     assert(initial.ok === true, "GET /api/digital-life/state should return ok");
@@ -219,6 +245,31 @@ async function main() {
       mood: presence.state.mood,
     }, null, 2));
   });
+
+  await assertDotEnvLoading();
+}
+
+async function assertDotEnvLoading() {
+  const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), "desktop-digital-life-env-"));
+  const envPath = path.join(tempDir, ".env");
+  const port = 19000 + Math.floor(Math.random() * 20000);
+  await fs.writeFile(envPath, `DIGITAL_LIFE_PORT=${port}\nXFYUN_TTS_ENABLED=0\n`, "utf8");
+  try {
+    await withServer(async ({ baseUrl, json }) => {
+      assert(baseUrl.endsWith(`:${port}`), ".env DIGITAL_LIFE_PORT should be used when process env is absent");
+      const status = await json("/api/status");
+      assert(status.ok === true, ".env-launched server should respond");
+    }, {
+      port,
+      setPort: false,
+      env: {
+        DIGITAL_LIFE_ENV_PATH: envPath,
+      },
+      dbPrefix: "desktop-digital-life-env-test",
+    });
+  } finally {
+    await fs.rm(tempDir, { recursive: true, force: true }).catch(() => {});
+  }
 }
 
 try {

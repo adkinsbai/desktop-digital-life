@@ -8,9 +8,19 @@ import { createDigitalLifeStore } from "./src/digitalLife.mjs";
 import { createDigitalLifeRoutes } from "./src/digitalLifeRoutes.mjs";
 
 const ROOT = path.dirname(fileURLToPath(import.meta.url));
+const PUBLIC_FILES = new Map([
+  ["/", "index.html"],
+  ["/index.html", "index.html"],
+  ["/digital-life.css", "digital-life.css"],
+  ["/digital-life.js", "digital-life.js"],
+  ["/digital-life-expression.js", "digital-life-expression.js"],
+]);
+
+await loadDotEnv(process.env.DIGITAL_LIFE_ENV_PATH || path.join(ROOT, ".env"));
+
 const RUNTIME_DIR = process.env.DIGITAL_LIFE_RUNTIME_DIR || path.join(ROOT, "runtime");
 const DB_PATH = process.env.DIGITAL_LIFE_DB_PATH || path.join(RUNTIME_DIR, "digital-life.db");
-const PORT = Number(process.env.DIGITAL_LIFE_PORT || 8788);
+const PORT = readPort(process.env.DIGITAL_LIFE_PORT, 8788);
 const HOST = process.env.DIGITAL_LIFE_HOST || "127.0.0.1";
 
 await fs.mkdir(RUNTIME_DIR, { recursive: true });
@@ -62,6 +72,43 @@ async function appendLog(event, data = {}) {
   await fs.appendFile(path.join(RUNTIME_DIR, "digital-life.log"), `${line}\n`).catch(() => {});
 }
 
+async function loadDotEnv(filePath) {
+  let raw = "";
+  try {
+    raw = await fs.readFile(filePath, "utf8");
+  } catch {
+    return;
+  }
+  for (const line of raw.split(/\r?\n/)) {
+    const trimmed = line.trim();
+    if (!trimmed || trimmed.startsWith("#")) continue;
+    const match = trimmed.match(/^([A-Za-z_][A-Za-z0-9_]*)=(.*)$/);
+    if (!match) continue;
+    const [, key, rawValue] = match;
+    if (process.env[key] !== undefined) continue;
+    process.env[key] = stripEnvValue(rawValue);
+  }
+}
+
+function stripEnvValue(value) {
+  const trimmed = value.trim();
+  if (
+    (trimmed.startsWith('"') && trimmed.endsWith('"'))
+    || (trimmed.startsWith("'") && trimmed.endsWith("'"))
+  ) {
+    return trimmed.slice(1, -1);
+  }
+  return trimmed;
+}
+
+function readPort(value, fallback) {
+  const port = Number(value || fallback);
+  if (!Number.isInteger(port) || port < 1 || port > 65535) {
+    throw new Error(`DIGITAL_LIFE_PORT must be an integer from 1 to 65535, received ${value}`);
+  }
+  return port;
+}
+
 async function openDatabase() {
   try {
     const bytes = await fs.readFile(DB_PATH);
@@ -83,15 +130,13 @@ function contentTypeFor(filePath) {
 }
 
 async function serveStatic(req, res, url) {
-  const pathname = url.pathname === "/" ? "/index.html" : url.pathname;
-  const decoded = decodeURIComponent(pathname);
-  const safeRelative = decoded.replace(/^\/+/, "");
-  const filePath = path.resolve(ROOT, safeRelative);
-  if (!filePath.startsWith(ROOT)) {
-    res.writeHead(403, { "content-type": "text/plain; charset=utf-8" });
-    res.end("Forbidden");
+  const publicFile = PUBLIC_FILES.get(url.pathname);
+  if (!publicFile) {
+    res.writeHead(404, { "content-type": "text/plain; charset=utf-8", "cache-control": "no-store" });
+    res.end("Not found");
     return;
   }
+  const filePath = path.join(ROOT, publicFile);
   try {
     const stat = await fs.stat(filePath);
     if (!stat.isFile()) throw new Error("not a file");
@@ -99,6 +144,10 @@ async function serveStatic(req, res, url) {
       "content-type": contentTypeFor(filePath),
       "cache-control": "no-store",
     });
+    if (req.method === "HEAD") {
+      res.end();
+      return;
+    }
     createReadStream(filePath).pipe(res);
   } catch {
     res.writeHead(404, { "content-type": "text/plain; charset=utf-8", "cache-control": "no-store" });

@@ -2,6 +2,7 @@ import { createDigitalLifeExpression } from "./digital-life-expression.js?v=line
 
 const app = document.querySelector(".life-app");
 const expressionCanvas = document.getElementById("lifeExpression");
+const expressionMiniCanvas = document.getElementById("lifeExpressionMini");
 const messageLog = document.getElementById("messageLog");
 const newMessagesNotice = document.getElementById("newMessagesNotice");
 const memoryList = document.getElementById("memoryList");
@@ -75,6 +76,16 @@ const expression = expressionCanvas
       reducedMotion: window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches,
     })
   : null;
+const expressionMini = expressionMiniCanvas
+  ? createDigitalLifeExpression(expressionMiniCanvas, {
+      reducedMotion: window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches,
+    })
+  : null;
+
+function setExpressionState(patch) {
+  expression?.setState(patch);
+  expressionMini?.setState(patch);
+}
 
 function el(id) {
   return document.getElementById(id);
@@ -107,7 +118,7 @@ function setLifeState(state, patch = {}) {
   document.querySelectorAll("[data-life-state]").forEach(button => {
     button.setAttribute("aria-pressed", button.dataset.lifeState === next ? "true" : "false");
   });
-  expression?.setState({
+  setExpressionState({
     state: next,
     mood: meta.mood,
     energy: (meta.energy ?? 70) / 100,
@@ -555,7 +566,7 @@ function syncExpression(state, activity = "idle") {
   const needs = state?.needs || {};
   const affect = state?.mind?.expression || state?.expression || state?.affect || needs.affect || needs;
   const expressionState = deriveExpressionState(state, activity);
-  expression?.setState({
+  setExpressionState({
     state: expressionState,
     mood: affect.mood || state?.brain?.mood_label || state?.mood || "calm",
     energy: Number(state?.energy || 0) / 100,
@@ -621,13 +632,13 @@ async function playSpeechAudio(result) {
     const samples = new Uint8Array(analyser.fftSize);
     const pump = () => {
       if (audio.paused || audio.ended || activeSpeechAudio !== audio) {
-        expression?.setState({ state: "idle", voiceLevel: 0 });
+        setExpressionState({ state: "idle", voiceLevel: 0 });
         if (lastLifeSnapshot) syncExpression(lastLifeSnapshot, "idle");
         return;
       }
       analyser.getByteTimeDomainData(samples);
       const metrics = estimateVoiceMetrics(samples);
-      expression?.setState({
+      setExpressionState({
         state: "speaking",
         voiceLevel: metrics.level,
         voicePitch: metrics.pitch,
@@ -636,14 +647,14 @@ async function playSpeechAudio(result) {
     };
     audio.addEventListener("play", pump, { once: true });
     audio.addEventListener("ended", () => {
-      expression?.setState({ state: "idle", voiceLevel: 0 });
+      setExpressionState({ state: "idle", voiceLevel: 0 });
       if (lastLifeSnapshot) syncExpression(lastLifeSnapshot, "idle");
     });
     await audio.play();
     return true;
   } catch (error) {
-    modelStatus.textContent = `audio blocked: ${error.message.slice(0, 80)}`;
-    expression?.setState({ state: "speaking", voiceLevel: 0.35, voicePitch: 0.45 });
+    modelStatus.textContent = "voice will start after browser audio permission";
+    setExpressionState({ state: "speaking", voiceLevel: 0.35, voicePitch: 0.45 });
     return false;
   }
 }
@@ -666,17 +677,17 @@ async function refreshLife() {
   });
   syncExpression(state.state, visualActivity);
   setText("companionName", state.state?.name || "Vibe");
-  setText("hardwareMode", hardware?.mode || "mock");
+  setText("hardwareMode", hardware?.mode === "adapter" ? "hardware" : "local");
   const presence = hardware?.presence?.nearby
     ? "nearby detected"
     : state.state?.presence?.status || "presence unknown";
   setText("presenceLabel", presence);
   const runtimeEnabled = Boolean(runtime.runtime?.enabled ?? state.state?.loop_enabled);
   loopToggle.checked = runtimeEnabled;
-  loopStatus.textContent = runtimeEnabled ? "server loop on" : "manual";
+  loopStatus.textContent = runtimeEnabled ? "autonomous rhythm on" : "quiet rhythm";
   if (runtimeLabel) {
     const last = runtime.runtime?.lastAction?.action_type || state.state?.presence?.activity || "idle";
-    runtimeLabel.textContent = runtimeEnabled ? `loop ${last}` : "loop paused";
+    runtimeLabel.textContent = runtimeEnabled ? `rhythm ${last}` : "quiet";
   }
   renderInnerState(state.state);
   renderVitals(state.state);
@@ -710,7 +721,7 @@ async function sendMessage(content) {
     });
   } catch (error) {
     optimisticMessages = optimisticMessages.filter(message => message.id !== pendingUser.id);
-    const failed = makeLocalMessage("assistant", `Message failed: ${error.message}`);
+    const failed = makeLocalMessage("assistant", "I lost the thread for a moment. Try that again.");
     optimisticMessages = [...optimisticMessages, failed];
     renderMessages(lastServerMessages, { forceScroll: true });
     setLifeState("idle");
@@ -729,16 +740,16 @@ async function sendMessage(content) {
     const reason = result.fallback_reason === "fetch failed"
       ? "model network unreachable"
       : result.fallback_reason;
-    modelStatus.textContent = `fallback: ${reason.slice(0, 80)}`;
+    modelStatus.textContent = reason.includes("network") ? "local fallback active" : "local mode active";
   }
   const speech = await jsonFetch("/api/digital-life/say", {
     method: "POST",
     body: JSON.stringify({ text: result.assistant_message?.content || "I heard you." }),
   }).catch(() => null);
   if (speech?.ok === false && speech.error) {
-    modelStatus.textContent = `tts failed: ${speech.error.slice(0, 80)}`;
+    modelStatus.textContent = "voice is unavailable";
   } else if (speech?.fallback_from && speech.fallback_error) {
-    modelStatus.textContent = `tts ${speech.mode}: ${speech.fallback_from} failed, using fallback`;
+    modelStatus.textContent = "voice fallback active";
     await playSpeechAudio(speech);
   } else {
     await playSpeechAudio(speech);
@@ -824,7 +835,7 @@ listenBtn.addEventListener("click", async () => {
     method: "POST",
     body: JSON.stringify({ mockTranscript: "owner is nearby" }),
   });
-  appendMessage("assistant", "Listening channel is open in mock mode.");
+  appendMessage("assistant", "I am listening.");
   scrollMessageLogToBottom();
   await syncPresence("listening");
   await refreshLife();
@@ -923,7 +934,7 @@ memoryForm?.addEventListener("submit", async event => {
 });
 
 loopToggle.addEventListener("change", async () => {
-  loopStatus.textContent = loopToggle.checked ? "server loop on" : "manual";
+  loopStatus.textContent = loopToggle.checked ? "autonomous rhythm on" : "quiet rhythm";
   await jsonFetch("/api/digital-life/runtime", {
     method: "POST",
     body: JSON.stringify({ enabled: loopToggle.checked }),
@@ -933,14 +944,23 @@ loopToggle.addEventListener("change", async () => {
     loopTimer = null;
   }
   if (loopToggle.checked) {
-    loopTimer = setInterval(() => refreshLife().catch(error => {
-      appendMessage("assistant", `Refresh failed: ${error.message}`);
+    loopTimer = setInterval(() => refreshLife().catch(() => {
+      modelStatus.textContent = "refresh paused";
     }), REFRESH_INTERVAL_MS);
   }
   await refreshLife();
 });
 modelToggle.addEventListener("click", () => {
   modelPanel.hidden = !modelPanel.hidden;
+  modelToggle.setAttribute("aria-expanded", modelPanel.hidden ? "false" : "true");
+  if (!modelPanel.hidden) modelProvider.focus();
+});
+
+modelPanel.addEventListener("keydown", event => {
+  if (event.key !== "Escape") return;
+  modelPanel.hidden = true;
+  modelToggle.setAttribute("aria-expanded", "false");
+  modelToggle.focus();
 });
 
 modelProvider.addEventListener("change", () => {
@@ -958,6 +978,7 @@ modelPanel.addEventListener("submit", event => {
 
 syncModelForm();
 refreshLife().catch(error => {
-  appendMessage("assistant", `Startup failed: ${error.message}`);
+  appendMessage("assistant", "I need a moment to wake up. Refresh once if I stay quiet.");
+  modelStatus.textContent = `startup issue: ${error.message.slice(0, 80)}`;
 });
 loopTimer = setInterval(() => refreshLife().catch(() => {}), REFRESH_INTERVAL_MS);

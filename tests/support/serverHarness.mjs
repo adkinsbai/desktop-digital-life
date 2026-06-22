@@ -50,7 +50,7 @@ export async function withServer(fn, options = {}) {
     return fn(createServerClient(externalBaseUrl, "external"));
   }
 
-  const port = await findFreePort();
+  const port = options.port || await findFreePort();
   const baseUrl = `http://${HOST}:${port}`;
   const dbPrefix = options.dbPrefix || "desktop-digital-life-test";
   const dbPath = new URL(`${dbPrefix}-${randomUUID()}.db`, RUNTIME_URL);
@@ -58,16 +58,19 @@ export async function withServer(fn, options = {}) {
   await fs.mkdir(RUNTIME_URL, { recursive: true });
   await fs.mkdir(generatedDir, { recursive: true });
 
+  const childEnv = {
+    ...process.env,
+    ...offlineEnv(),
+    ...(options.env || {}),
+    DIGITAL_LIFE_DB_PATH: fileURLToPath(dbPath),
+    DIGITAL_LIFE_RUNTIME_DIR: fileURLToPath(generatedDir),
+  };
+  if (options.setPort === false) delete childEnv.DIGITAL_LIFE_PORT;
+  else childEnv.DIGITAL_LIFE_PORT = String(port);
+
   const child = spawn(process.execPath, ["server.mjs"], {
     cwd: ROOT_URL,
-    env: {
-      ...process.env,
-      ...offlineEnv(),
-      ...(options.env || {}),
-      DIGITAL_LIFE_PORT: String(port),
-      DIGITAL_LIFE_DB_PATH: fileURLToPath(dbPath),
-      DIGITAL_LIFE_RUNTIME_DIR: fileURLToPath(generatedDir),
-    },
+    env: childEnv,
     stdio: options.stdio || "ignore",
     windowsHide: true,
   });

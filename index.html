@@ -17,8 +17,8 @@
       </div>
       <div class="top-status">
         <span class="status-dot" aria-hidden="true"></span>
-        <span id="hardwareMode">mock</span>
-        <button id="modelToggle" type="button">Model</button>
+        <span id="hardwareMode">local</span>
+        <button id="modelToggle" type="button" aria-controls="modelPanel" aria-expanded="false">Model</button>
       </div>
     </header>
 
@@ -46,18 +46,21 @@
             <input id="modelApiKey" type="password" autocomplete="off" spellcheck="false">
           </label>
           <div class="model-actions">
-            <span id="modelStatus">mock fallback</span>
+            <span id="modelStatus">local fallback</span>
             <button class="primary-action" type="submit">Save</button>
           </div>
         </form>
         <div class="panel-head">
+          <div class="chat-life-mini" aria-hidden="true">
+            <canvas id="lifeExpressionMini" class="life-expression life-expression-mini"></canvas>
+          </div>
           <div>
             <p>Companion Thread</p>
             <h2>今晚聊什么</h2>
           </div>
           <div class="thread-status">
             <span id="presenceLabel">presence unknown</span>
-            <span id="runtimeLabel">loop unknown</span>
+            <span id="runtimeLabel">quiet</span>
           </div>
         </div>
         <div class="message-log" id="messageLog" aria-live="polite"></div>
@@ -105,7 +108,7 @@
             <button id="refreshBtn" type="button">Refresh</button>
           </div>
           <div class="life-loop-row">
-            <label><input id="loopToggle" type="checkbox"> server loop</label>
+            <label><input id="loopToggle" type="checkbox"> autonomous rhythm</label>
             <span id="loopStatus">manual</span>
           </div>
         </section>
@@ -123,7 +126,7 @@
           </div>
         </section>
         <details class="memory-drawer mind-drawer">
-          <summary><span>Mind Kernel</span><b>Internal State</b></summary>
+          <summary><span>Inner Life</span><b>State</b></summary>
           <div class="mind-panel" id="mindPanel" aria-live="polite"></div>
         </details>
         <section>
